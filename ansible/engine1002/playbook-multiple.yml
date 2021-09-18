@@ -13,7 +13,7 @@
            path: 1vms.csv
            key: name
       register: vms
-
+ 
     - name: Creates a new Virtual Machine from template
       ovirt_vm:
            auth: "{{ ovirt_auth }}"
