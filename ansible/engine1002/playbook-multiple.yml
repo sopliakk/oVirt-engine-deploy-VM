@@ -59,3 +59,4 @@
            user_name: root
            root_password: "password"
       loop: "{{ vms.dict|dict2items }}"
+      
