@@ -40,7 +40,6 @@
          state: present
       loop: "{{ vms.dict|dict2items }}"
 
-
     - name: Cloud_init running
       ovirt_vm:
         wait: no
@@ -59,4 +58,3 @@
            user_name: root
            root_password: "password"
       loop: "{{ vms.dict|dict2items }}"
-
