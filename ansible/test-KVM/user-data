@@ -1,0 +1,51 @@
+#cloud-config
+
+# Hostname management
+preserve_hostname: False
+hostname: CentOS-7
+fqdn: CentOS-7
+
+# Setup Users with ssh keys so that I can log in into new machine
+users:
+    - default
+    - name: admin
+      groups: ['wheel']
+      shell: /bin/bash
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      lock_passwd: false
+      passwd: password_hash
+      ssh-authorized-keys:
+        - ssh-rsa YourKey
+
+write_files:
+  - path:  /etc/sysconfig/network-scripts/ifcfg-eth0
+    permissions: '0644'
+    content: |
+         TYPE="Ethernet"
+         PROXY_METHOD="none"
+         BROWSER_ONLY="no"
+         BOOTPROTO="none"
+         IPV4_FAILURE_FATAL="no"
+         NAME="eth0"
+         DEVICE="eth0"
+         ONBOOT="yes"
+         IPADDR="YourIP"
+         PREFIX="24"
+         GATEWAY="YourGateway"
+         DNS1="YourDNSServer"
+
+# Configure where output will go
+output:
+  all: ">> /var/log/cloud-init.log"
+
+ssh_authorized_keys:
+  - ssh-rsa YourKey
+
+# set timezone for VM
+timezone: Europe/Moscow
+
+# Remove cloud-init
+runcmd:
+  - sudo systemctl restart network
+  - sudo systemctl restart sshd
+

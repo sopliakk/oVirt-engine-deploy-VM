@@ -1,0 +1,51 @@
+---
+- name  : Create single VM on KVM server
+  hosts : localhost
+  tasks :
+  - name: Test try creating vm on KVM
+    block:
+      - name: Downloading template image
+        get_url:
+          url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+          dest: /var/lib/libvirt/boot/CentOS-7-x86_64-GenericCloud.qcow
+
+      - name: Creating dir for vm files
+        shell: mkdir -v /var/lib/libvirt/images/CentOS-7
+
+      - name: Copy our data files
+        copy:
+          src: "{{ item.src }}"
+          dest: /var/lib/libvirt/images/CentOS-7
+          mode: 0644
+        with_items:
+          - { src: "meta-data" }
+          - { src: "user-data" }
+
+      - name: Copy our qcow2 file
+        shell: |
+          cd /var/lib/libvirt/images/CentOS-7
+          cp -v /var/lib/libvirt/boot/CentOS-7-x86_64-GenericCloud.qcow2 CentOS-7.qcow2
+
+      - name: Creating image for new VM
+        shell: |
+          cd /var/lib/libvirt/images/CentOS-7
+          export LIBGUESTFS_BACKEND=direct
+          qemu-img create -f qcow2 -o preallocation=metadata CentOS-7.new.image 10G
+          virt-resize --quiet --expand /dev/sda1 CentOS-7.qcow2 CentOS-7.new.image
+
+      - name: rewrite our image as qcow2
+        shell:
+          cd /var/lib/libvirt/images/CentOS-7
+          mv -v CentOS-7.new.image CentOS-7.qcow2
+
+      - name: Creating cloud_init ISO and pull for our VM
+        shell: |
+          cd /var/lib/libvirt/images/CentOS-7
+          mkisofs -o CentOS-7-cidata.iso -V cidata -J -r user-data meta-data
+          virsh pool-create-as --name CentOS-7 --type dir --target /var/lib/libvirt/images/CentOS-7
+
+      - name: Finally, creating a Virtual machine
+        shell: |
+          cd /var/lib/libvirt/images/CentOS-7
+          virt-install --import --name CentOS-7 --memory 2048 --vcpus 2 --cpu host --disk CentOS-7.qcow2,format=qcow2,bus=virtio --disk CentOS-7-cidata.iso,device=cdrom --network bridge=management --os-type=linux --os-variant=centos7.0 --graphics vnc --noautoconsole
+    delegate_to: linux1
