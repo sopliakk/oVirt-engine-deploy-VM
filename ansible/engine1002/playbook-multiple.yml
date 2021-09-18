@@ -29,6 +29,7 @@
            type: "{{ item.value.class }}"
       loop: "{{ vms.dict|dict2items }}"
 
+
     - name: upsize vm's disk.
       ovirt_disk:
          auth: "{{ ovirt_auth }}"

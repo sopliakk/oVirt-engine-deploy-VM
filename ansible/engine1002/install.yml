@@ -12,6 +12,7 @@
         state: latest
         update_cache: yes
 
+
     - name: Change zabbix-agent config file
       lineinfile:
          path: /etc/zabbix/zabbix_agentd.conf
